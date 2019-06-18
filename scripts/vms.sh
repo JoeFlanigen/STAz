@@ -216,5 +216,3 @@ open_vm_inbound_ports() {
     done
 }
 
-\
-
