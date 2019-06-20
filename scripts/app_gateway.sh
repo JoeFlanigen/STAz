@@ -7,7 +7,43 @@ create_app_gateway_cli() {
     local public_ip_name="$PREFIX-agw-pip"
     local private_ip="10.2.3.5"
     
-    # echo "CREATING GATEWAY PUBLIC IP"
+    echo "CREATING GATEWAY PUBLIC IP"
+    create_public_ip $public_ip_name
+
+    echo "CREATING GATEWAY"
+
+    echo "az network application-gateway create"
+    az network application-gateway create \
+        --capacity 3 \
+        --cert-file "./certs/appgw_1/AppGW1.pfx" \
+        --cert-password "pass21$" \
+        --connection-draining-timeout 20 \
+        --frontend-port 443 \
+        --http-settings-cookie-based-affinity Enabled \
+        --http-settings-port 80 \
+        --http-settings-protocol Http \   
+        --location $LOCATION \
+        --name $app_gw_name \
+        --private-ip-address $private_ip \
+        --public-ip-address $public_ip_name \
+        --public-ip-address-allocation Static \
+        --resource-group $RESOURCE_GROUP_NAME \
+        --routing-rule-type Basic \
+        --servers "10.2.2.10" "10.2.2.11" "10.2.2.12" \
+        --sku Standard_v2 \
+        --subnet $GATEWAY_SUBNET_NAME \
+        --vnet-name $VNET_NAME \
+        || (echo "FAILED TO CREATE GATEWAY: $PREFIX-gw" && exit 1)
+
+    #################################################
+    # add the HTTP port to the application gateway
+    #################################################
+    echo "az network application-gateway frontend-port create: http_port_80"
+    az network application-gateway frontend-port create \
+        --gateway-name $app_gw_name \
+        --name http_port_80 \
+        --port 80 \
+        --resource-group $RESOURCE_GROUP_NAME
     
     ##################################################
     # # add the listeners to the gateway
