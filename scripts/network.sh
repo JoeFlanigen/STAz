@@ -14,6 +14,8 @@ create_subnet() {
         --vnet-name $VNET_NAME \
         || (echo "FAILED TO CREATE SUBNET: $subnet_name" && exit 1)
 
+    
+
     echo "CREATED SUBNET $subnet_name"
 }
 
@@ -31,4 +33,19 @@ create_vnet () {
     echo "CREATED VNET $VNET_NAME"
 }
 
+create_public_ip() {
 
+    public_ip_name=$1
+
+    echo "CREATING PUBLIC IP"
+
+    az network public-ip create \
+        --name $public_ip_name \
+        --resource-group $RESOURCE_GROUP_NAME \
+        --location $LOCATION \
+        --allocation-method Static \
+        --sku Standard
+
+    echo "CREATED PUBLIC IP: $public_ip_name"
+
+}

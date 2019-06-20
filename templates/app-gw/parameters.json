@@ -1,0 +1,54 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "value": "eastus"
+        },
+        "applicationGatewayName": {
+            "value": "st-app-gw"
+        },
+        "tier": {
+            "value": "Standard_v2"
+        },
+        "skuSize": {
+            "value": "Standard_v2"
+        },
+        "capacity": {
+            "value": 3
+        },
+        "subnetName": {
+            "value": "st-eng-00-gateway"
+        },
+        "zones": {
+            "value": []
+        },
+        "publicIpAddressName": {
+            "value": "app-gw-ip"
+        },
+        "sku": {
+            "value": "Standard"
+        },
+        "allocationMethod": {
+            "value": "Static"
+        },
+        "publicIpZones": {
+            "value": []
+        },
+        "AppGW1_data": {
+            "value": null
+        },
+        "AppGW1_password": {
+            "value": null
+        },
+        "80_to_8080_httpCert": {
+            "value": null
+        },
+        "443_to_8080_httpCert": {
+            "value": null
+        },
+        "autoScaleMaxCapacity": {
+            "value": 10
+        }
+    }
+}

@@ -8,8 +8,6 @@ create_admin_vm() {
 
     echo ">>>>>>>> CREATING ADMIN MACHINE $vm_name <<<<<<<<<<<"
 
-    # --ssh-dest-key-path "./certs" \
-    # 
     az vm create \
         --admin-username $VM_ADMIN_UID \
         --authentication-type ssh \
@@ -124,49 +122,6 @@ attach_disk() {
 
 }
 
-open_inbound_ports() {
-    
-    local vm_name=$1
-    local ip_address=$2
-    
-    local priority=350
-    local nsg_name="$vm_name-nsg"
-        
-    for i in "${@:2}"
-    do
-
-        echo "CREATING INBOUND NSG: $nsg_name + "
-        az network nsg create --name $nsg_name --resource-group $RESOURCE_GROUP_NAME
-        
-        echo "Opening NSG inbound port: $i"
-
-        az network nsg rule create \
-            --access Allow \
-            --destination-port-range $i \
-            --direction Inbound \
-            --name $vm_name \
-            --nsg-name $nsg_name \
-            --priority $priority \
-            --protocol tcp \
-            --resource-group $RESOURCE_GROUP_NAME \
-            || (echo "FAILED TO CREATE NSG Rule: $nsg_name" && exit 1)
-
-        ((priority++))
-
-        echo "OPENING INBOUND VM PORT: $i"
-        
-        az vm open-port \
-            --name $vm_name \
-            --nsg-name $nsg_name \
-            --priority $priority \
-            --port $i \
-            --resource-group $RESOURCE_GROUP_NAME \
-            || (echo "FAILED TO CREATE VM RULE: $vm_name" && exit 1)
-
-        ((priority++))
-    done
-}
-
 open_nsg_inbound_ports() {
     
     local nsg_name=$1
@@ -215,4 +170,47 @@ open_vm_inbound_ports() {
          ((priority++))
     done
 }
+
+# open_inbound_ports() {
+    
+#     local vm_name=$1
+#     local ip_address=$2
+    
+#     local priority=350
+#     local nsg_name="$vm_name-nsg"
+        
+#     for i in "${@:2}"
+#     do
+
+#         echo "CREATING INBOUND NSG: $nsg_name + "
+#         az network nsg create --name $nsg_name --resource-group $RESOURCE_GROUP_NAME
+        
+#         echo "Opening NSG inbound port: $i"
+
+#         az network nsg rule create \
+#             --access Allow \
+#             --destination-port-range $i \
+#             --direction Inbound \
+#             --name $vm_name \
+#             --nsg-name $nsg_name \
+#             --priority $priority \
+#             --protocol tcp \
+#             --resource-group $RESOURCE_GROUP_NAME \
+#             || (echo "FAILED TO CREATE NSG Rule: $nsg_name" && exit 1)
+
+#         ((priority++))
+
+#         echo "OPENING INBOUND VM PORT: $i"
+        
+#         az vm open-port \
+#             --name $vm_name \
+#             --nsg-name $nsg_name \
+#             --priority $priority \
+#             --port $i \
+#             --resource-group $RESOURCE_GROUP_NAME \
+#             || (echo "FAILED TO CREATE VM RULE: $vm_name" && exit 1)
+
+#         ((priority++))
+#     done
+# }
 

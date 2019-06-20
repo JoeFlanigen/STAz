@@ -1,0 +1,330 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "type": "string"
+        },
+        "applicationGatewayName": {
+            "type": "string"
+        },
+        "tier": {
+            "type": "string"
+        },
+        "skuSize": {
+            "type": "string"
+        },
+        "capacity": {
+            "type": "int",
+            "defaultValue": 2
+        },
+        "subnetName": {
+            "type": "string"
+        },
+        "zones": {
+            "type": "array"
+        },
+        "publicIpAddressName": {
+            "type": "string"
+        },
+        "sku": {
+            "type": "string"
+        },
+        "allocationMethod": {
+            "type": "string"
+        },
+        "publicIpZones": {
+            "type": "array"
+        },
+        "AppGW1_data": {
+            "type": "securestring"
+        },
+        "AppGW1_password": {
+            "type": "securestring"
+        },
+        "80_to_8080_httpCert": {
+            "type": "securestring"
+        },
+        "443_to_8080_httpCert": {
+            "type": "securestring"
+        },
+        "autoScaleMaxCapacity": {
+            "type": "int"
+        }
+    },
+    "variables": {
+        "vnetId": "/subscriptions/bf7adf12-c3a8-426c-9976-29f145eba70f/resourceGroups/st-eng-00-rg/providers/Microsoft.Network/virtualNetworks/eng-st-eng-00-vnet",
+        "publicIPRef": "[resourceId('Microsoft.Network/publicIPAddresses/', parameters('publicIpAddressName'))]",
+        "subnetRef": "[concat(variables('vnetId'), '/subnets/', parameters('subnetName'))]",
+        "applicationGatewayId": "[resourceId('Microsoft.Network/applicationGateways', parameters('applicationGatewayName'))]"
+    },
+    "resources": [
+        {
+            "name": "[parameters('applicationGatewayName')]",
+            "type": "Microsoft.Network/applicationGateways",
+            "apiVersion": "2019-02-01",
+            "location": "[parameters('location')]",
+            "zones": "[parameters('zones')]",
+            "dependsOn": [
+                "[concat('Microsoft.Network/publicIPAddresses/', parameters('publicIpAddressName'))]"
+            ],
+            "tags": {},
+            "properties": {
+                "sku": {
+                    "name": "[parameters('skuSize')]",
+                    "tier": "[parameters('tier')]"
+                },
+                "gatewayIPConfigurations": [
+                    {
+                        "name": "appGatewayIpConfig",
+                        "properties": {
+                            "subnet": {
+                                "id": "[variables('subnetRef')]"
+                            }
+                        }
+                    }
+                ],
+                "frontendIPConfigurations": [
+                    {
+                        "name": "appGwPublicFrontendIp",
+                        "properties": {
+                            "PublicIPAddress": {
+                                "id": "[variables('publicIPRef')]"
+                            }
+                        }
+                    }
+                ],
+                "frontendPorts": [
+                    {
+                        "name": "port_8080",
+                        "properties": {
+                            "Port": 8080
+                        }
+                    },
+                    {
+                        "name": "port_443",
+                        "properties": {
+                            "Port": 443
+                        }
+                    }
+                ],
+                "backendAddressPools": [
+                    {
+                        "name": "app-gw-be-pool",
+                        "properties": {
+                            "backendAddresses": [
+                                {
+                                    "fqdn": "10.2.2.10"
+                                },
+                                {
+                                    "fqdn": "10.2.2.11"
+                                },
+                                {
+                                    "fqdn": "10.2.2.12"
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "backendHttpSettingsCollection": [
+                    {
+                        "name": "80_to_8080",
+                        "properties": {
+                            "Port": 8080,
+                            "Protocol": "Https",
+                            "cookieBasedAffinity": "Enabled",
+                            "requestTimeout": 20,
+                            "trustedRootCertificates": [
+                                {
+                                    "id": "[concat(variables('applicationGatewayId'), '/trustedRootCertificates/80_to_8080a0959338-931b-41ea-a856-1ba4b2b3e026')]"
+                                }
+                            ],
+                            "affinityCookieName": "",
+                            "pickHostNameFromBackendAddress": true,
+                            "probe": {
+                                "id": "[concat(variables('applicationGatewayId'), '/probes/80_to_8080a0959338-931b-41ea-a856-1ba4b2b3e027')]"
+                            }
+                        }
+                    },
+                    {
+                        "name": "443_to_8080",
+                        "properties": {
+                            "Port": 8080,
+                            "Protocol": "Https",
+                            "cookieBasedAffinity": "Enabled",
+                            "requestTimeout": 20,
+                            "trustedRootCertificates": [
+                                {
+                                    "id": "[concat(variables('applicationGatewayId'), '/trustedRootCertificates/443_to_8080a0959338-931b-41ea-a856-1ba4b2b3e028')]"
+                                }
+                            ],
+                            "affinityCookieName": "",
+                            "pickHostNameFromBackendAddress": true,
+                            "probe": {
+                                "id": "[concat(variables('applicationGatewayId'), '/probes/443_to_8080a0959338-931b-41ea-a856-1ba4b2b3e029')]"
+                            }
+                        }
+                    }
+                ],
+                "httpListeners": [
+                    {
+                        "name": "80_to_8080_listener",
+                        "properties": {
+                            "frontendIPConfiguration": {
+                                "id": "[concat(variables('applicationGatewayId'), '/frontendIPConfigurations/appGwPublicFrontendIp')]"
+                            },
+                            "frontendPort": {
+                                "id": "[concat(variables('applicationGatewayId'), '/frontendPorts/port_8080')]"
+                            },
+                            "protocol": "Https",
+                            "sslCertificate": {
+                                "id": "[concat(variables('applicationGatewayId'), '/sslCertificates/AppGW1')]"
+                            }
+                        }
+                    },
+                    {
+                        "name": "443_to_8080_listener",
+                        "properties": {
+                            "frontendIPConfiguration": {
+                                "id": "[concat(variables('applicationGatewayId'), '/frontendIPConfigurations/appGwPublicFrontendIp')]"
+                            },
+                            "frontendPort": {
+                                "id": "[concat(variables('applicationGatewayId'), '/frontendPorts/port_443')]"
+                            },
+                            "protocol": "Https",
+                            "sslCertificate": {
+                                "id": "[concat(variables('applicationGatewayId'), '/sslCertificates/AppGW1')]"
+                            }
+                        }
+                    }
+                ],
+                "requestRoutingRules": [
+                    {
+                        "Name": "80_to_8080",
+                        "properties": {
+                            "RuleType": "Basic",
+                            "httpListener": {
+                                "id": "[concat(variables('applicationGatewayId'), '/httpListeners/80_to_8080_listener')]"
+                            },
+                            "backendAddressPool": {
+                                "id": "[concat(variables('applicationGatewayId'), '/backendAddressPools/app-gw-be-pool')]"
+                            },
+                            "backendHttpSettings": {
+                                "id": "[concat(variables('applicationGatewayId'), '/backendHttpSettingsCollection/80_to_8080')]"
+                            }
+                        }
+                    },
+                    {
+                        "Name": "443_to_8080",
+                        "properties": {
+                            "RuleType": "Basic",
+                            "httpListener": {
+                                "id": "[concat(variables('applicationGatewayId'), '/httpListeners/443_to_8080_listener')]"
+                            },
+                            "backendAddressPool": {
+                                "id": "[concat(variables('applicationGatewayId'), '/backendAddressPools/app-gw-be-pool')]"
+                            },
+                            "backendHttpSettings": {
+                                "id": "[concat(variables('applicationGatewayId'), '/backendHttpSettingsCollection/443_to_8080')]"
+                            }
+                        }
+                    }
+                ],
+                "enableHttp2": true,
+                "sslCertificates": [
+                    {
+                        "name": "AppGW1",
+                        "properties": {
+                            "data": "[parameters('AppGW1_data')]",
+                            "password": "[parameters('AppGW1_password')]"
+                        }
+                    },
+                    {
+                        "name": "AppGW1",
+                        "properties": {
+                            "data": "[parameters('AppGW1_data')]",
+                            "password": "[parameters('AppGW1_password')]"
+                        }
+                    }
+                ],
+                "probes": [
+                    {
+                        "name": "80_to_8080a0959338-931b-41ea-a856-1ba4b2b3e027",
+                        "properties": {
+                            "backendHttpSettings": [
+                                {
+                                    "id": "[concat(variables('applicationGatewayId'), '/backendHttpSettingsCollection/80_to_8080')]"
+                                }
+                            ],
+                            "interval": 30,
+                            "minServers": 0,
+                            "path": "/",
+                            "protocol": "Https",
+                            "timeout": 30,
+                            "unhealthyThreshold": 3,
+                            "pickHostNameFromBackendHttpSettings": true
+                        }
+                    },
+                    {
+                        "name": "443_to_8080a0959338-931b-41ea-a856-1ba4b2b3e029",
+                        "properties": {
+                            "backendHttpSettings": [
+                                {
+                                    "id": "[concat(variables('applicationGatewayId'), '/backendHttpSettingsCollection/443_to_8080')]"
+                                }
+                            ],
+                            "interval": 30,
+                            "minServers": 0,
+                            "path": "/",
+                            "protocol": "Https",
+                            "timeout": 30,
+                            "unhealthyThreshold": 3,
+                            "pickHostNameFromBackendHttpSettings": true
+                        }
+                    }
+                ],
+                "autoscaleConfiguration": {
+                    "minCapacity": "[parameters('capacity')]",
+                    "maxCapacity": "[parameters('autoScaleMaxCapacity')]"
+                },
+                "trustedRootCertificates": [
+                    {
+                        "name": "80_to_8080a0959338-931b-41ea-a856-1ba4b2b3e026",
+                        "properties": {
+                            "data": "[parameters('80_to_8080_httpCert')]",
+                            "backendHttpSettings": [
+                                {
+                                    "id": "[concat(variables('applicationGatewayId'), '/backendHttpSettingsCollection/80_to_8080')]"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "443_to_8080a0959338-931b-41ea-a856-1ba4b2b3e028",
+                        "properties": {
+                            "data": "[parameters('443_to_8080_httpCert')]",
+                            "backendHttpSettings": [
+                                {
+                                    "id": "[concat(variables('applicationGatewayId'), '/backendHttpSettingsCollection/443_to_8080')]"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "apiVersion": "2019-02-01",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "name": "[parameters('publicIpAddressName')]",
+            "location": "[parameters('location')]",
+            "sku": {
+                "name": "[parameters('sku')]"
+            },
+            "zones": "[parameters('publicIpZones')]",
+            "properties": {
+                "publicIPAllocationMethod": "[parameters('allocationMethod')]"
+            }
+        }
+    ]
+}
