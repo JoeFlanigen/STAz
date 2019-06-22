@@ -35,8 +35,8 @@ create_vnet () {
 
 create_public_ip() {
 
-    public_ip_name=$1
-
+    local public_ip_name=$1
+    
     echo "CREATING PUBLIC IP"
 
     az network public-ip create \
@@ -47,5 +47,4 @@ create_public_ip() {
         --sku Standard
 
     echo "CREATED PUBLIC IP: $public_ip_name"
-
 }

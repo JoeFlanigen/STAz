@@ -7,9 +7,8 @@ create_app_gateway_cli() {
     local public_ip_name="$PREFIX-agw-pip"
     local private_ip="10.2.3.5"
     
-    echo "CREATING GATEWAY PUBLIC IP"
     create_public_ip $public_ip_name
-
+    
     echo "CREATING GATEWAY"
 
     echo "az network application-gateway create"
@@ -21,7 +20,7 @@ create_app_gateway_cli() {
         --frontend-port 443 \
         --http-settings-cookie-based-affinity Enabled \
         --http-settings-port 80 \
-        --http-settings-protocol Http \   
+        --http-settings-protocol Http \
         --location $LOCATION \
         --name $app_gw_name \
         --private-ip-address $private_ip \
@@ -31,43 +30,36 @@ create_app_gateway_cli() {
         --routing-rule-type Basic \
         --servers "10.2.2.10" "10.2.2.11" "10.2.2.12" \
         --sku Standard_v2 \
-        --subnet $GATEWAY_SUBNET_NAME \
         --vnet-name $VNET_NAME \
+        --subnet $GATEWAY_SUBNET_NAME \
         || (echo "FAILED TO CREATE GATEWAY: $PREFIX-gw" && exit 1)
 
+    echo "GATEWAY CREATED"
+    
     #################################################
-    # add the HTTP port to the application gateway
+    # add the ports to the application gateway
     #################################################
-    echo "az network application-gateway frontend-port create: http_port_80"
+    echo "az network application-gateway frontend-port create: port_80"
     az network application-gateway frontend-port create \
         --gateway-name $app_gw_name \
-        --name http_port_80 \
+        --name port_80 \
         --port 80 \
         --resource-group $RESOURCE_GROUP_NAME
     
-    ##################################################
-    # # add the listeners to the gateway
-    ##################################################
-    echo "az network application-gateway http-listener create: http_port_80"
+    #################################################
+    # add the listeners to the gateway
+    #################################################
+    echo "az network application-gateway http-listener create: port_80_listener"
     az network application-gateway http-listener create \
-        --frontend-port http_port_80 \
+        --frontend-ip $public_ip_name \
+        --frontend-port port_80 \
         --gateway-name $app_gw_name \
         --name "$app_gw_name-listener-80" \
         --resource-group $RESOURCE_GROUP_NAME
-        
-        
-
-    # echo "az network application-gateway http-listener create: http_port_443"
-    # az network application-gateway http-listener create \
-    #     --frontend-port "https_port_443" \
-    #     --gateway-name $app_gw_name \
-    #     --name "$app_gw_name-listener-443" \
-    #     --resource-group $RESOURCE_GROUP_NAME
-
-
-    ##################################################
-    # # Add the redirection
-    ##################################################
+    
+    #################################################
+    # Add the redirection
+    #################################################
     echo "az network application-gateway redirect-config create: 80"
     az network application-gateway redirect-config create \
         --name "redirect_80_to_443" \
@@ -77,10 +69,10 @@ create_app_gateway_cli() {
         --target-listener "$app_gw_name-listener-80" \
         --include-path true \
         --include-query-string true
-
-    ##################################################
-    # # Add gateway rules
-    ##################################################
+        
+    #################################################
+    # Add gateway rules
+    #################################################
     echo "az network application-gateway rule create: 80"
     az network application-gateway rule create \
         --gateway-name $app_gw_name \
@@ -89,7 +81,7 @@ create_app_gateway_cli() {
         --http-listener "$app_gw_name-listener-80" \
         --rule-type Basic \
         --redirect-config "redirect_80_to_443"
-}
+ }
 
 create_app_gateway_template() {
 

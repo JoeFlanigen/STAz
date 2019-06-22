@@ -4,7 +4,7 @@ CUSTOMER_NAME="st-test"
 LOCATION="eastus " # the region where you want to deploy resources
 VM_ADMIN_UID="centos"
 
-PREFIX="$CUSTOMER_NAME-00" #prepended to resources
+PREFIX="$CUSTOMER_NAME-20" #prepended to resources
 
 # Networking
 VNET_NAME="test-$PREFIX-vnet"

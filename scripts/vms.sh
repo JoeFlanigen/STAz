@@ -82,7 +82,6 @@ create_worker_vm() {
         --authentication-type ssh \
         --data-disk-sizes-gb $app_disk_size $svr_disk_size \
         --image CentOS \
-        --generate-ssh-keys \
         --name $vm_name \
         --nsg "$vm_name-nsg" \
         --nsg-rule SSH \
@@ -98,28 +97,6 @@ create_worker_vm() {
         || (echo "FAILED TO CREATE VM: $vm_name" && exit 1)
 
     echo ">>>>>>>> CREATED WORKER MACHINE $vm_name <<<<<<<<<<<"
-}
-
-attach_disk() {
-
-    local disk_sku=$1
-    local disk_name=$2
-    local vm_name=$3
-    local disk_capacity=$4
-
-    echo "ATTACHING DISK: $disk_name"
-
-    az vm disk attach \
-        --name $disk_name \
-        --resource-group $RESOURCE_GROUP_NAME \
-        --size-gb $disk_capacity \
-        --sku $disk_sku \
-        --vm-name $vm_name \
-        --new  \
-        || (echo "FAILED TO ATTACH DISK: $vm_name" && exit 1)
-
-    echo "DISK ATTACHED: $disk_name"
-
 }
 
 open_nsg_inbound_ports() {
@@ -170,47 +147,4 @@ open_vm_inbound_ports() {
          ((priority++))
     done
 }
-
-# open_inbound_ports() {
-    
-#     local vm_name=$1
-#     local ip_address=$2
-    
-#     local priority=350
-#     local nsg_name="$vm_name-nsg"
-        
-#     for i in "${@:2}"
-#     do
-
-#         echo "CREATING INBOUND NSG: $nsg_name + "
-#         az network nsg create --name $nsg_name --resource-group $RESOURCE_GROUP_NAME
-        
-#         echo "Opening NSG inbound port: $i"
-
-#         az network nsg rule create \
-#             --access Allow \
-#             --destination-port-range $i \
-#             --direction Inbound \
-#             --name $vm_name \
-#             --nsg-name $nsg_name \
-#             --priority $priority \
-#             --protocol tcp \
-#             --resource-group $RESOURCE_GROUP_NAME \
-#             || (echo "FAILED TO CREATE NSG Rule: $nsg_name" && exit 1)
-
-#         ((priority++))
-
-#         echo "OPENING INBOUND VM PORT: $i"
-        
-#         az vm open-port \
-#             --name $vm_name \
-#             --nsg-name $nsg_name \
-#             --priority $priority \
-#             --port $i \
-#             --resource-group $RESOURCE_GROUP_NAME \
-#             || (echo "FAILED TO CREATE VM RULE: $vm_name" && exit 1)
-
-#         ((priority++))
-#     done
-# }
 
