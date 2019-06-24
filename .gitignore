@@ -1,1 +1,5 @@
 .DS_Store
+certs/appgw_1/appGW1.key
+certs/appgw_1/AppGW1.pfx
+certs/appgw_1/appGW1.cer
+certs/appgw_1/appGW1.crt

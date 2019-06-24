@@ -4,7 +4,7 @@ create_admin_vm() {
 
     local private_ip_address=$1
     
-    local vm_name="$PREFIX-admin-vm"
+    local vm_name="${PREFIX}AdminVm"
 
     echo ">>>>>>>> CREATING ADMIN MACHINE $vm_name <<<<<<<<<<<"
 
@@ -15,9 +15,9 @@ create_admin_vm() {
         --image CentOS \
         --generate-ssh-keys \
         --name $vm_name \
-        --nsg "$vm_name-nsg" \
+        --nsg "${vm_name}Nsg" \
         --nsg-rule SSH \
-        --os-disk-name "$vm_name-os" \
+        --os-disk-name "${vm_name}Os" \
         --os-disk-size-gb 32 \
         --output table \
         --private-ip-address $private_ip_address \
@@ -44,9 +44,9 @@ create_test_worker_vm() {
         --data-disk-sizes-gb 40 100 \
         --image CentOS \
         --name $vm_name \
-        --nsg "$vm_name-nsg" \
+        --nsg "${vm_name}Nsg" \
         --nsg-rule SSH \
-        --os-disk-name "$vm_name-os" \
+        --os-disk-name "${vm_name}Os" \
         --os-disk-size-gb 80 \
         --output table \
         --public-ip-address "" \
@@ -71,7 +71,7 @@ create_worker_vm() {
     local app_disk_size=$5
     local svr_disk_size=$6
 
-    local os_disk_name="$vm_name-os"
+    local os_disk_name="${vm_name}Os"
 
     echo "CREATING VM: $vm_name"
 
@@ -83,15 +83,15 @@ create_worker_vm() {
         --data-disk-sizes-gb $app_disk_size $svr_disk_size \
         --image CentOS \
         --name $vm_name \
-        --nsg "$vm_name-nsg" \
+        --nsg "${vm_name}Nsg" \
         --nsg-rule SSH \
-        --os-disk-name "$vm_name-os" \
+        --os-disk-name "${vm_name}Os" \
         --os-disk-size-gb $os_disk_size \
         --output table \
         --public-ip-address "" \
         --private-ip-address $vm_ip \
         --resource-group $RESOURCE_GROUP_NAME \
-        --size $1 \
+        --size $vm_size \
         --subnet $WORKER_SUBNET_NAME \
         --vnet-name $VNET_NAME  \
         || (echo "FAILED TO CREATE VM: $vm_name" && exit 1)
@@ -114,7 +114,7 @@ open_nsg_inbound_ports() {
             --access Allow \
             --destination-port-range $i \
             --direction Inbound \
-            --name "open_$i" \
+            --name "open${i}" \
             --nsg-name $nsg_name \
             --priority $priority \
             --protocol tcp \
@@ -139,7 +139,7 @@ open_vm_inbound_ports() {
         az vm open-port \
             --port $i \
             --name $vm_name \
-            --nsg-name "$vm_name-nsg" \
+            --nsg-name "${vm_name}Nsg" \
             --priority $priority \
             --resource-group $RESOURCE_GROUP_NAME \
             || (echo "FAILED TO CREATE VM RULE: $vm_name" && exit 1)

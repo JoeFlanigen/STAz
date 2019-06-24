@@ -12,7 +12,7 @@ function create_scale_set() {
         --generate-ssh-keys \
         --image OpenLogic:CentOS:7.5:7.5.20180815 \
         --lb-sku Standard \
-        --load-balancer "$PREFIX-gw" \
+        --load-balancer "${PREFIX}Gw" \
         --location $LOCATION \
         --name $ss_name \
         --priority Regular \
@@ -31,14 +31,14 @@ function create_scale_set() {
 
     echo "CREATED SCALE SET"
 
-    # az network lb rule create \
-    #     --admin-username $VM_ADMIN_UID
-    #     --resource-group $RESOURCE_GROUP_NAME \
-    #     --name "$PREFIX-rule-01" \
-    #     --lb-name "$PREFIX-lb" \
-    #     --backend-pool-name $ss_name \
-    #     --backend-port 0 \
-    #     --frontend-ip-name "$PREFIX-ss-frontend-ip" \
-    #     --frontend-port 0 \
-    #     --protocol tcp
+    az network lb rule create \
+        --admin-username $VM_ADMIN_UID
+        --resource-group $RESOURCE_GROUP_NAME \
+        --name "${PREFIX}Rule01" \
+        --lb-name "${PREFIX}Lb" \
+        --backend-pool-name $ss_name \
+        --backend-port 0 \
+        --frontend-ip-name "${PREFIX}SsFrontendIp" \
+        --frontend-port 0 \
+        --protocol tcp
 }

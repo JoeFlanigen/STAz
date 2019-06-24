@@ -35,16 +35,18 @@ create_vnet () {
 
 create_public_ip() {
 
-    local public_ip_name=$1
+    local pip_name=$1
     
     echo "CREATING PUBLIC IP"
 
     az network public-ip create \
-        --name $public_ip_name \
+        --name $pip_name \
         --resource-group $RESOURCE_GROUP_NAME \
         --location $LOCATION \
         --allocation-method Static \
         --sku Standard
 
-    echo "CREATED PUBLIC IP: $public_ip_name"
+    az network public-ip show -g $RESOURCE_GROUP_NAME -n $pip_name
+
+    echo "CREATED PUBLIC IP: ${public_ip_name}"
 }

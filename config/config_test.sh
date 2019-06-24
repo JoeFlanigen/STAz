@@ -1,6 +1,6 @@
 echo "LOADING CONFIG"
 
-CUSTOMER_NAME="st-test"
+CUSTOMER_NAME="stTest"
 LOCATION="eastus " # the region where you want to deploy resources
 VM_ADMIN_UID="centos"
 
