@@ -47,23 +47,29 @@ create_app_gateway_cli() {
         --port 80 \
         --resource-group $RESOURCE_GROUP_NAME
 
+    az network application-gateway frontend-port create \
+        --gateway-name $app_gw_name \
+        --name port443 \
+        --port 443 \
+        --resource-group $RESOURCE_GROUP_NAME
+
     #################################################
     # add the listeners to the gateway
     #################################################
-    # echo "az network application-gateway http-listener create: port_80_listener"
-    # az network application-gateway http-listener create \
-    #     --frontend-ip $public_ip_name \
-    #     --frontend-port port80 \
-    #     --gateway-name $app_gw_name \
-    #     --name "${app_gw_name}Listener80" \
-    #     --resource-group $RESOURCE_GROUP_NAME
-    
     echo "az network application-gateway http-listener create: port_80_listener"
     az network application-gateway http-listener create \
         --frontend-ip $public_ip_name \
         --frontend-port port80 \
         --gateway-name $app_gw_name \
         --name "${app_gw_name}Listener80" \
+        --resource-group $RESOURCE_GROUP_NAME
+
+    echo "az network application-gateway http-listener create: port_443_listener"
+    az network application-gateway http-listener create \
+        --frontend-ip $public_ip_name \
+        --frontend-port port443 \
+        --gateway-name $app_gw_name \
+        --name "${app_gw_name}Listener443" \
         --resource-group $RESOURCE_GROUP_NAME
 
     #################################################
@@ -75,7 +81,7 @@ create_app_gateway_cli() {
         --gateway-name $app_gw_name \
         --resource-group $RESOURCE_GROUP_NAME \
         --type Permanent \
-        --target-listener "{$app_gw_name}Listener80" \
+        --target-listener "{$app_gw_name}Listener443" \
         --include-path true \
         --include-query-string true
 
@@ -87,7 +93,7 @@ create_app_gateway_cli() {
         --gateway-name $app_gw_name \
         --name "rule80to443" \
         --resource-group $RESOURCE_GROUP_NAME \
-        --http-listener "$app_gw_name-listener-80" \
+        --http-listener "${app_gw_name}Listener80" \
         --rule-type Basic \
         --redirect-config "redirect_80_to_443"
 }
